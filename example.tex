@@ -1,0 +1,64 @@
+%%This is a very basic article template.
+%%There is just one section and two subsections.
+\documentclass{article}
+
+\usepackage{inputcxt}
+
+\begin{document}
+
+
+\section{Title}
+
+\subsection{Subtitle}
+
+Plain text.
+
+\subsection{Another subtitle}
+
+More plain text.
+
+$x\nearrow y$
+
+$x\swarrow y$
+
+$x\neswarrow y$
+
+\begin{newcxt}*[t]{$(G,M,I)$}{example.cxt}
+B
+
+9
+3
+
+$(g_1,w_1)$
+$(g_2,w_1)$
+$(g_3,w_1)$
+$(g_1,w_2)$
+$(g_2,w_2)$
+$(g_3,w_2)$
+$(g_1,w_3)$
+$(g_2,w_3)$
+$(g_3,w_3)$
+$m_1$
+$m_2$
+$m_3$
+XbX
+uXX
+d.X
+X.X
+bX.
+X.X
+X.X
+.XX
+.X.
+\end{newcxt}
+
+\begin{center}
+  \framebox{\inputcxt*[t]{$K_1$}{example.cxt}}
+  \framebox{\inputcxt*{$K_2$}{example.cxt}}
+  \framebox{\inputcxt*[b]{$K_3$}{example.cxt}}
+\end{center}
+
+Further text.
+
+
+\end{document}

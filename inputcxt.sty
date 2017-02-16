@@ -1,0 +1,122 @@
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                                                  %
+% Author: Francesco Kriegel (francesco.kriegel@tu-dresden.de)                                      %
+%                                                                                                  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+\NeedsTeXFormat{LaTeX2e}%
+\ProvidesPackage{inputcxt}[2017/02/08 v1.0 Parser for Formal Contexts in Burmeister Format]%
+%
+\RequirePackage{etoolbox,filecontents,mathtools,rotating,tikz,xparse}%
+%
+\makeatletter%
+%
+\newcommand{\neswarrow}{\mathrel{\text{\ooalign{$\swarrow$\cr$\nearrow$}}}}%
+%
+\newlength{\inputcxt@kreuzwidth}
+%
+\newcommand{\inputcxtKreuzStyle}{\LARGE}%
+\newcommand{\inputcxt@Kreuz}{\raisebox{-0.5pt}{\inputcxtKreuzStyle$\times$}}%
+\newcommand{\inputcxt@Punkt}{\raisebox{-0.5pt}{\inputcxtKreuzStyle$\cdot$}}%
+%
+\newcommand{\inputcxtArrowStyle}{}%
+\newcommand{\inputcxt@Down}{\raisebox{1.25pt}{\inputcxtArrowStyle$\swarrow$}}%
+\newcommand{\inputcxt@Up}{\raisebox{1.25pt}{\inputcxtArrowStyle$\nearrow$}}%
+\newcommand{\inputcxt@Both}{\raisebox{1.25pt}{\inputcxtArrowStyle$\neswarrow$}}%
+%
+\def\inputcxt@kreuz{\inputcxt@Kreuz}%
+\def\inputcxt@punkt{\makebox[\inputcxt@kreuzwidth][c]{\clap{\inputcxt@Punkt}}\vphantom{\inputcxt@Kreuz}}%
+\def\inputcxt@down{\makebox[\inputcxt@kreuzwidth][c]{\clap{\inputcxt@Down}}\vphantom{\inputcxt@Kreuz}}%
+\def\inputcxt@up{\makebox[\inputcxt@kreuzwidth][c]{\clap{\inputcxt@Up}}\vphantom{\inputcxt@Kreuz}}%
+\def\inputcxt@both{\makebox[\inputcxt@kreuzwidth][c]{\clap{\inputcxt@Both}}\vphantom{\inputcxt@Kreuz}}%
+%
+\DeclareListParser*{\inputcxt@parse}{}%
+\newcommand{\inputcxt@parsesymbol}[1]{&%
+\ifx#1x\inputcxt@kreuz%
+\else\ifx#1X\inputcxt@kreuz%
+\else\ifx#1d\inputcxt@down%
+\else\ifx#1u\inputcxt@up%
+\else\ifx#1b\inputcxt@both%
+\else\inputcxt@punkt%
+\fi\fi\fi\fi\fi%
+}%
+\newcommand{\inputcxt@parseline}[1]{\inputcxt@parse{\inputcxt@parsesymbol}{#1}}%
+%
+\newcommand{\inputcxt@sidewaysbox}[1]{\begin{turn}{90}#1~~\end{turn}}%
+%
+\NewDocumentCommand{\inputcxt}{s d[] m m}{%
+\settowidth{\inputcxt@kreuzwidth}{\inputcxt@kreuz}%
+%
+\newread\inputcxt@file%
+\newcount\inputcxt@lines%
+\inputcxt@lines=0%
+\openin\inputcxt@file=#4 %
+% \begingroup%
+% \endlinechar=-1%
+\@whilesw\unless\ifeof\inputcxt@file\fi{%
+\read\inputcxt@file t\expandafter o\csname inputcxt@line\number\inputcxt@lines\endcsname%
+\advance\inputcxt@lines by \@ne%
+}%
+% \endgroup%
+\closein\inputcxt@file%
+%
+\newcount\inputcxt@objects%
+\newcount\inputcxt@attributes%
+\inputcxt@objects=\csname inputcxt@line2\endcsname%
+\inputcxt@attributes=\csname inputcxt@line3\endcsname%
+%
+\newcount\inputcxt@objectline%
+\newcount\inputcxt@attributeline%
+\newcount\inputcxt@incidenceline%
+\inputcxt@objectline=4%
+\inputcxt@attributeline=4%
+\inputcxt@incidenceline=4%
+\advance\inputcxt@attributeline by \number\inputcxt@objects%
+\advance\inputcxt@incidenceline by \number\inputcxt@objects%
+\advance\inputcxt@incidenceline by \number\inputcxt@attributes%
+%
+\let\inputcxt@tabularbody\empty%
+\gappto\inputcxt@tabularbody{\multicolumn{1}{|c||}{#3}}%
+%
+\foreach \m in {1,...,\inputcxt@attributes} {%
+\global\advance\inputcxt@attributeline by \@ne%
+\IfBooleanTF{#1}{%
+\expandafter\gappto\expandafter\inputcxt@tabularbody\expandafter{\expandafter&\expandafter\expandafter\expandafter\inputcxt@sidewaysbox\expandafter\expandafter\expandafter{\csname inputcxt@line\number\inputcxt@attributeline\endcsname}}%
+}{%
+\expandafter\gappto\expandafter\inputcxt@tabularbody\expandafter{\expandafter&\expandafter\expandafter\expandafter{\csname inputcxt@line\number\inputcxt@attributeline\endcsname}}%
+}%
+}%
+\gappto\inputcxt@tabularbody{\\\hline\hline}%
+%
+\foreach \g in {1,...,\inputcxt@objects} {%
+\global\advance\inputcxt@objectline by \@ne%
+\global\advance\inputcxt@incidenceline by \@ne%
+\expandafter\gappto\expandafter\inputcxt@tabularbody\expandafter{\expandafter\expandafter\expandafter{\csname inputcxt@line\number\inputcxt@objectline\endcsname}}%
+\expandafter\gappto\expandafter\inputcxt@tabularbody\expandafter{\expandafter\expandafter\expandafter\inputcxt@parseline\expandafter\expandafter\expandafter{\csname inputcxt@line\number\inputcxt@incidenceline\endcsname}}%
+\gappto\inputcxt@tabularbody{\\\hline}%
+}%
+%
+\begingroup%
+\def\arraystretch{1.618}%
+\begin{tabular}[#2]{|l||*{\number\inputcxt@attributes}{c|}}\hline%
+\inputcxt@tabularbody%
+\end{tabular}%
+\endgroup%
+}%
+%
+\DeclareDocumentEnvironment{newcxt}{s o m m}{%
+\begingroup%
+\csname filecontents*\endcsname{#4}%
+}{%
+\csname endfilecontents*\endcsname%
+\endgroup%
+\IfBooleanTF{#1}{%
+\inputcxt*[#2]{#3}{#4}%
+}{%
+\inputcxt[#2]{#3}{#4}%
+}%
+}%
+%
+\makeatother%
+%
